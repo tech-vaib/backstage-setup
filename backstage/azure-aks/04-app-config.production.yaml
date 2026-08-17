@@ -1,0 +1,139 @@
+# ============================================================================
+# app-config.production.yaml
+# Place this in the root of your Backstage app repo (alongside app-config.yaml)
+# It is layered on top of app-config.yaml at runtime:
+#   node packages/backend --config app-config.yaml --config app-config.production.yaml
+#
+# All secrets referenced via ${VAR} come from the K8s Secret "backstage-secrets"
+# (see 03-k8s-manifests.yaml), injected as environment variables.
+# ============================================================================
+
+app:
+  title: "Company Developer Portal"
+  baseUrl: https://backstage.internal.yourcompany.com
+
+backend:
+  baseUrl: https://backstage.internal.yourcompany.com
+  listen:
+    port: 7007
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: https://backstage.internal.yourcompany.com
+  auth:
+    keys:
+      - secret: ${BACKEND_SECRET}
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      ssl:
+        rejectUnauthorized: true   # Azure Postgres Flexible Server requires TLS
+
+# ----------------------------------------------------------------------------
+# GitHub — source of catalog-info.yaml files, TechDocs source, code links
+# ----------------------------------------------------------------------------
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+      # If you use GitHub Enterprise instead, add:
+      # apiBaseUrl: https://github.yourcompany.com/api/v3
+
+# ----------------------------------------------------------------------------
+# Auth — Microsoft Entra ID (Azure AD), matching your existing Azure identity
+# ----------------------------------------------------------------------------
+auth:
+  environment: production
+  providers:
+    microsoft:
+      production:
+        clientId: ${AAD_CLIENT_ID}
+        clientSecret: ${AAD_CLIENT_SECRET}
+        tenantId: ${AAD_TENANT_ID}
+        domainHint: ${AAD_TENANT_ID}
+
+# ----------------------------------------------------------------------------
+# Catalog — where entities come from. Point catalog discovery at GitHub org(s)
+# so every repo with a catalog-info.yaml gets picked up automatically.
+# ----------------------------------------------------------------------------
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location, Group, User]
+  locations:
+    - type: github-discovery
+      target: https://github.com/your-org/*/blob/-/catalog-info.yaml
+
+# ----------------------------------------------------------------------------
+# TechDocs — rendered from each repo's docs/ folder (mkdocs). Confluence
+# content is handled separately below since TechDocs itself only reads
+# from git-backed docs, not Confluence.
+# ----------------------------------------------------------------------------
+techdocs:
+  builder: local
+  generator:
+    runIn: docker
+  publisher:
+    type: local   # For real multi-replica prod, switch to `azureBlobStorage`
+                   # once you provision a Storage Account — local storage
+                   # doesn't survive pod restarts/scale-out.
+
+# ----------------------------------------------------------------------------
+# Kubernetes plugin — read-only visibility into your AKS workloads from
+# within each component's page. Uses the AKS cluster's own kubeconfig/
+# managed identity; grant the Backstage pod's identity "reader" RBAC.
+# ----------------------------------------------------------------------------
+kubernetes:
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - url: https://<YOUR_AKS_API_SERVER_FQDN>
+          name: aks-primary
+          authProvider: azure
+          skipTLSVerify: false
+
+# ----------------------------------------------------------------------------
+# Confluence — Backstage core has no built-in Confluence plugin. Use the
+# community plugin (search or docs-reader) so Confluence content is
+# searchable/linkable from Backstage without migrating docs off Confluence.
+#   yarn --cwd packages/backend add @k-phoen/backstage-plugin-confluence
+# (or the RoadieHQ Confluence search collator, depending on which fits
+# your Confluence Cloud vs. Data Center setup)
+# ----------------------------------------------------------------------------
+confluence:
+  baseUrl: https://yourcompany.atlassian.net/wiki
+  auth:
+    type: basic          # or 'bearer' for Confluence Data Center PATs
+    email: ${CONFLUENCE_USER_EMAIL}
+    token: ${CONFLUENCE_API_TOKEN}
+  spaces:
+    - ENG
+    - PLATFORM
+
+# ----------------------------------------------------------------------------
+# APIM / Application Gateway — Backstage doesn't need special config to sit
+# behind these; they're pure network/ingress concerns handled in Azure and
+# in 03-k8s-manifests.yaml's Ingress resource. If you want to surface your
+# APIM-managed APIs *inside* the Backstage API catalog (recommended), use
+# the community `apim` / Azure DevOps API importer plugin, or script a
+# nightly job that pulls `az apim api list` and writes API entities:
+#
+#   az apim api list --resource-group <rg> --service-name <apim-name> -o json
+#
+# then transform each into a Backstage `kind: API` entity and register via
+# the catalog-import API. Not scripted here because APIM product/API naming
+# conventions are org-specific — see the setup guide for a starter script.
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Cosmos DB for MongoDB — NOT usable as Backstage's catalog database.
+# If you want Cosmos-backed data (e.g. a service registry your team already
+# maintains in Mongo) visible in Backstage, expose it via a small custom
+# backend plugin/entity provider that reads Cosmos and emits catalog
+# entities — don't attempt to point `backend.database` at it.
+# ----------------------------------------------------------------------------

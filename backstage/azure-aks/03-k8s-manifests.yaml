@@ -1,0 +1,105 @@
+# ============================================================================
+# Backstage on AKS — Kubernetes manifests
+# Applied by 02-azure-aks-setup.sh, which substitutes __IMAGE__ with the
+# freshly built/pushed ACR image reference.
+#
+# Ingress here targets Azure Application Gateway Ingress Controller (AGIC).
+# If AGIC isn't installed on your AKS cluster yet:
+#   az aks enable-addons -g <AKS_RG> -n <AKS_NAME> \
+#     --addons ingress-appgw \
+#     --appgw-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/applicationGateways/<name>
+# ============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage
+  labels:
+    app: backstage
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backstage
+  template:
+    metadata:
+      labels:
+        app: backstage
+    spec:
+      containers:
+        - name: backstage
+          image: __IMAGE__
+          ports:
+            - containerPort: 7007
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: POSTGRES_HOST
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: POSTGRES_HOST } }
+            - name: POSTGRES_PORT
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: POSTGRES_PORT } }
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: POSTGRES_USER } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: POSTGRES_PASSWORD } }
+            - name: GITHUB_TOKEN
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: GITHUB_TOKEN } }
+            - name: AAD_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: AAD_CLIENT_ID } }
+            - name: AAD_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: AAD_CLIENT_SECRET } }
+            - name: AAD_TENANT_ID
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: AAD_TENANT_ID } }
+            - name: BACKEND_SECRET
+              valueFrom: { secretKeyRef: { name: backstage-secrets, key: BACKEND_SECRET } }
+          readinessProbe:
+            httpGet: { path: /healthcheck, port: 7007 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthcheck, port: 7007 }
+            initialDelaySeconds: 40
+            periodSeconds: 20
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backstage
+spec:
+  selector:
+    app: backstage
+  ports:
+    - port: 80
+      targetPort: 7007
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backstage
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+    appgw.ingress.kubernetes.io/backend-protocol: "http"
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    # If APIM sits in front of App Gateway, APIM's backend pool should point
+    # at this ingress's hostname/App Gateway public IP — configure that in
+    # APIM as a separate API + backend (see the setup guide).
+spec:
+  rules:
+    - host: backstage.internal.yourcompany.com   # replace with your real hostname
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backstage
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - backstage.internal.yourcompany.com
+      secretName: backstage-tls   # create via cert-manager or import an existing cert

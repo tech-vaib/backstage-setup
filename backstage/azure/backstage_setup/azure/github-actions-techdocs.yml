@@ -1,0 +1,57 @@
+name: Publish TechDocs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "catalog-info.yaml"
+      - "mkdocs.yml"
+      - "docs/**"
+      - ".github/workflows/techdocs.yml"
+  pull_request:
+    paths:
+      - "catalog-info.yaml"
+      - "mkdocs.yml"
+      - "docs/**"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx @techdocs/cli generate --no-docker --source-dir . --output-dir ./site
+
+  publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: techdocs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx @techdocs/cli generate --no-docker --source-dir . --output-dir ./site
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publish TechDocs
+        env:
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.TECHDOCS_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_CONTAINER: ${{ secrets.TECHDOCS_CONTAINER }}
+        run: |
+          npx @techdocs/cli publish \
+            --publisher-type azureBlobStorage \
+            --storage-name "$AZURE_STORAGE_CONTAINER" \
+            --entity "default/Component/${GITHUB_REPOSITORY##*/}" \
+            --directory ./site \
+            --azureAccountName "$AZURE_STORAGE_ACCOUNT"
