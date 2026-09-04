@@ -1,0 +1,52 @@
+app:
+  title: Company Developer Portal
+  baseUrl: ${APP_BASE_URL:-http://localhost:3000}
+
+organization:
+  name: Company
+
+backend:
+  baseUrl: ${BACKEND_BASE_URL:-http://localhost:7007}
+  listen:
+    port: 7007
+    host: 0.0.0.0
+
+  # Production uses PostgreSQL. The environment variables are deliberately
+  # kept outside Git.
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST:-localhost}
+      port: ${POSTGRES_PORT:-5432}
+      user: ${POSTGRES_USER:-backstage}
+      password: ${POSTGRES_PASSWORD}
+      database: ${POSTGRES_DB:-backstage}
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+# Example catalog locations. Replace/add locations as described in
+# docs/CONFIGURATION.md.
+catalog:
+  rules:
+    - allow: [Component, API, Group, System, Resource, Location]
+  locations:
+    - type: file
+      target: ./catalog/components/*.yaml
+    - type: file
+      target: ./catalog/apis/*.yaml
+    - type: file
+      target: ./catalog/groups/*.yaml
+
+techdocs:
+  builder: local
+  generator:
+    runIn: docker
+  publisher:
+    type: local
+
+# Confluence:
+# Add the Confluence integration/plugin appropriate to your Backstage version
+# and configure it with environment variables. See docs/CONFLUENCE.md.

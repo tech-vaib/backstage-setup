@@ -1,0 +1,21 @@
+app:
+  baseUrl: http://localhost:3000
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+    host: 0.0.0.0
+  database:
+    client: pg
+    connection:
+      host: localhost
+      port: 5432
+      user: backstage
+      password: ${POSTGRES_PASSWORD}
+      database: backstage
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
