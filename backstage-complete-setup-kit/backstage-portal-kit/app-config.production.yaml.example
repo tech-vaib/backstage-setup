@@ -1,0 +1,37 @@
+app:
+  baseUrl: https://backstage.example.com
+
+backend:
+  baseUrl: https://backstage.example.com
+  listen:
+    port: 7007
+    host: 0.0.0.0
+  database:
+    client: pg
+    connection:
+      host: postgres
+      port: 5432
+      user: backstage
+      password: ${POSTGRES_PASSWORD}
+      database: backstage
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+catalog:
+  locations:
+    - type: file
+      target: ./catalog/components/*.yaml
+    - type: file
+      target: ./catalog/apis/*.yaml
+    - type: file
+      target: ./catalog/groups/*.yaml
+
+techdocs:
+  builder: local
+  generator:
+    runIn: local
+  publisher:
+    type: local

@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: example-service
+  description: Example service - replace with a real service.
+  annotations:
+    github.com/project-slug: YOUR_GITHUB_ORG/YOUR_REPO
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  providesApis:
+    - example-api

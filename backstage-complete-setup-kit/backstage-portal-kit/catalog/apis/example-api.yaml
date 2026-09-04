@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: example-api
+  description: Example OpenAPI API with environment-specific definitions.
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  definition:
+    $text: https://raw.githubusercontent.com/YOUR_GITHUB_ORG/YOUR_REPO/main/openapi.yaml
