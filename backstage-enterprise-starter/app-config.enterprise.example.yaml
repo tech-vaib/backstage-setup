@@ -1,0 +1,42 @@
+# Merge the applicable sections into your generated app-config.yaml.
+# Do NOT replace the whole generated file blindly.
+
+integrations:
+  github:
+    # GitHub.com example
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+    # GitHub Enterprise Server example
+    # - host: ghe.example.company
+    #   apiBaseUrl: https://ghe.example.company/api/v3
+    #   rawBaseUrl: https://ghe.example.company/raw
+    #   token: ${GHE_TOKEN}
+
+backend:
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: ${POSTGRES_DB}
+
+  reading:
+    allow:
+      # Add every private Swagger host that Backstage must read.
+      - host: dev-api.example.company.com
+      - host: qa-api.example.company.com
+      - host: api.example.company.com
+
+catalog:
+  # Add this only after installing the GitHub catalog provider.
+  providers:
+    github:
+      company-platform:
+        organization: YOUR_GITHUB_ORG
+        catalogPath: /catalog-info.yaml
+        schedule:
+          frequency: { minutes: 30 }
+          timeout: { minutes: 3 }

@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: customer-service-qa-v1
+  title: Customer Service API v1 - QA
+  description: Customer Service API version 1 - QA
+  tags:
+    - customer
+    - qa
+spec:
+  type: openapi
+  lifecycle: staging
+  owner: group:platform-team
+  definition:
+    $text: https://qa-api.example.company.com/customer/v1/swagger.json

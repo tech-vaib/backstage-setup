@@ -1,0 +1,24 @@
+# Alternative for a small number of API files.
+# For many APIs, prefer storing them in Git and using a catalog ingestion strategy.
+#
+# These paths are examples only.
+
+catalog:
+  locations:
+    - type: file
+      target: ./catalog/apis/customer-service/dev/customer-v1.yaml
+
+    - type: file
+      target: ./catalog/apis/customer-service/dev/customer-v2.yaml
+
+    - type: file
+      target: ./catalog/apis/customer-service/qa/customer-v1.yaml
+
+    - type: file
+      target: ./catalog/apis/customer-service/qa/customer-v2.yaml
+
+    - type: file
+      target: ./catalog/apis/customer-service/prod/customer-v1.yaml
+
+    - type: file
+      target: ./catalog/apis/customer-service/prod/customer-v2.yaml

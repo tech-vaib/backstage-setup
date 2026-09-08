@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: customer-service-prod-v2
+  title: Customer Service API v2 - PROD
+  description: Customer Service API version 2 - Production
+  tags:
+    - customer
+    - prod
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:platform-team
+  definition:
+    $text: https://api.example.company.com/customer/v2/swagger.json

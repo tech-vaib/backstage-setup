@@ -1,0 +1,27 @@
+# Copy this file into the ROOT of each application repository.
+# Example:
+#   customer-service/catalog-info.yaml
+#
+# Replace all placeholders.
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+
+metadata:
+  name: REPLACE_WITH_REPO_NAME
+  title: REPLACE_WITH_DISPLAY_NAME
+  description: REPLACE_WITH_DESCRIPTION
+
+  annotations:
+    github.com/project-slug: YOUR_GITHUB_ORG/REPLACE_WITH_REPO_NAME
+
+  links:
+    - url: https://confluence.example.company/display/SPACE/REPLACE_WITH_PAGE
+      title: Confluence Documentation
+      icon: docs
+
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: REPLACE_WITH_SYSTEM

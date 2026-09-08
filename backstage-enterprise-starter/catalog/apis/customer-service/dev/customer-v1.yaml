@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: customer-service-dev-v1
+  title: Customer Service API v1 - DEV
+  description: Customer Service API version 1 - Development
+  tags:
+    - customer
+    - dev
+spec:
+  type: openapi
+  lifecycle: development
+  owner: group:platform-team
+  definition:
+    $text: https://dev-api.example.company.com/customer/v1/swagger.json

@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: customer-service
+  title: Customer Service
+  description: Example service catalog entry
+  annotations:
+    github.com/project-slug: YOUR_GITHUB_ORG/customer-service
+  links:
+    - url: https://confluence.example.company/display/PLAT/customer-service
+      title: Confluence Documentation
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:platform-team
+  system: customer-platform
