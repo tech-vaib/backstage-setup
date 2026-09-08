@@ -1,0 +1,32 @@
+app-config.yaml
+
+kubernetes:
+  serviceLocatorMethod:
+    type: 'multiTenant'
+
+  clusterLocatorMethods:
+    - type: 'config'
+      clusters:
+        - url: https://private-aks-api.example.com
+          name: dev-aks
+          authProvider: serviceAccount
+          skipTLSVerify: false
+          skipMetricsLookup: false
+
+        - url: https://private-aks-stage.example.com
+          name: stage-aks
+          authProvider: serviceAccount
+          skipTLSVerify: false
+          skipMetricsLookup: false
+
+#Then your Backstage catalog entities can reference Kubernetes resources.          
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payment-service
+  annotations:
+    backstage.io/kubernetes-id: payment-service
+spec:
+  type: service
+  lifecycle: production
+  owner: payments-team
